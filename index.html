@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>מפה לחיים טובים</title>
-<meta name="theme-color" content="#2f5d3a">
+<meta name="theme-color" content="#4a3a31">
 <meta name="description" content="מקומות שווים בכל הארץ: יקבים, מעיינות, תצפיות, אוכל טוב ועוד – מאת ליעד וולמן, מורה דרך מהגולן">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
@@ -24,10 +24,10 @@ COLOUR and TYPE: stone land, sea blue, deep olive for the chrome, category colou
 LAYOUT: a side panel on the right (search, regions, layers, list) and the map filling the rest; on a phone, map full screen with a pull-up sheet.
 */
 :root{color-scheme:light dark;
---bg:light-dark(#ffffff,#131916);--bg2:light-dark(#f6f5f0,#1a211d);--ink:light-dark(#17221c,#e8eee9);--mute:light-dark(#5b6860,#9daaa2);
---line:light-dark(#e2e4dd,#2a332e);--brand:light-dark(#2f5d3a,#93cba0);--brandInk:light-dark(#ffffff,#0f1a13);
+--bg:light-dark(#fbf8f4,#1a1613);--bg2:light-dark(#f1ebe3,#241e1a);--ink:light-dark(#2a221d,#efe7df);--mute:light-dark(#76685d,#a89a8e);
+--line:light-dark(#e6ddd2,#3a312b);--brand:light-dark(#4a3a31,#d9bfa6);--brandInk:light-dark(#ffffff,#1a1613);--accent:light-dark(#b25a2e,#e08a5c);--accentInk:light-dark(#ffffff,#1a1613);
 --land:light-dark(#f4f0e5,#1f2822);--land2:light-dark(#e4ddcc,#161c18);--sea:light-dark(#a9d3e0,#11303b);--water:light-dark(#3d8aa6,#6bb6cf);
---bord:light-dark(#8f846c,#66766b);--lab:light-dark(#4f4a3d,#b4beb6);--reg:light-dark(#7a8657,#87a07c);--shadow:light-dark(rgba(30,40,30,.18),rgba(0,0,0,.5))}
+--bord:light-dark(#8f846c,#66766b);--lab:light-dark(#4f4a3d,#b4beb6);--reg:light-dark(#9a6a45,#c29a78);--shadow:light-dark(rgba(30,40,30,.18),rgba(0,0,0,.5))}
 :root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
 *{box-sizing:border-box;min-width:0}
 [hidden]{display:none!important}
@@ -35,7 +35,7 @@ html,body{height:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Assistant,"Segoe UI",Arial,sans-serif;overflow:hidden}
 button,input{font:inherit;color:inherit}
 button{cursor:pointer}
-:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 h1,h2,h3{font-family:Rubik,Assistant,sans-serif;margin:0}
 .app{display:grid;grid-template-columns:360px minmax(0,1fr);height:100dvh}
 .panel{display:flex;flex-direction:column;background:var(--bg);border-inline-end:1px solid var(--line);z-index:5;min-height:0}
@@ -48,15 +48,15 @@ h1,h2,h3{font-family:Rubik,Assistant,sans-serif;margin:0}
 .search svg{position:absolute;right:30px;top:19px;width:20px;height:20px;color:var(--mute)}
 .tabs{display:flex;gap:4px;padding:0 18px;border-bottom:1px solid var(--line)}
 .tabs button{flex:1;height:44px;border:0;background:none;font-weight:600;color:var(--mute);border-bottom:3px solid transparent}
-.tabs button[aria-selected=true]{color:var(--ink);border-color:var(--brand)}
+.tabs button[aria-selected=true]{color:var(--ink);border-color:var(--accent)}
 .tabs .n{font-weight:400;font-size:14px}
 .scrollp{flex:1;overflow:auto;padding:14px 18px 18px;min-height:0}
 h3{font-size:15px;margin:4px 0 10px}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px}
 .chips button{border:1px solid var(--line);background:var(--bg2);border-radius:999px;padding:6px 12px;font-size:14px;min-height:36px}
-.chips button:hover{border-color:var(--brand);color:var(--brand)}
+.chips button:hover{border-color:var(--accent);color:var(--accent)}
 .lh{display:flex;justify-content:space-between;align-items:center}
-.lh button{border:0;background:none;color:var(--brand);font-weight:600;font-size:14px;min-height:36px}
+.lh button{border:0;background:none;color:var(--accent);font-weight:600;font-size:14px;min-height:36px}
 .layers{list-style:none;margin:0;padding:0}
 .layers label{display:flex;align-items:center;gap:12px;padding:7px 4px;border-radius:10px;cursor:pointer;min-height:48px}
 .layers label:hover{background:var(--bg2)}
@@ -65,7 +65,7 @@ h3{font-size:15px;margin:4px 0 10px}
 .layers .c{color:var(--mute);font-size:14px;font-variant-numeric:tabular-nums}
 .layers .sw{width:38px;height:22px;border-radius:99px;background:var(--line);position:relative;flex:none;transition:background .2s}
 .layers .sw::after{content:"";position:absolute;top:3px;right:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.3);transition:transform .2s}
-.layers input:checked~.sw{background:var(--brand)}
+.layers input:checked~.sw{background:var(--accent)}
 .layers input:checked~.sw::after{transform:translateX(-16px)}
 .layers input:focus-visible~.sw{outline:3px solid var(--brand);outline-offset:2px}
 .layers li.empty{opacity:.5}
@@ -81,7 +81,7 @@ h3{font-size:15px;margin:4px 0 10px}
 .pfoot p{margin:0;width:100%;font-size:13px;color:var(--mute)}
 .btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--bg2);border-radius:10px;padding:0 12px;min-height:40px;font-size:14px;font-weight:600;text-decoration:none;color:var(--ink)}
 .btn input{display:none}
-.btn.pri{background:var(--brand);border-color:var(--brand);color:var(--brandInk)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accentInk)}
 .map{position:relative;overflow:hidden;background:var(--sea);touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
 .map.drag{cursor:grabbing}
 .map>svg{position:absolute;inset:0;width:100%;height:100%;display:block}
@@ -136,7 +136,7 @@ svg *{vector-effect:non-scaling-stroke}
  .panel.open{transform:none}
  .grab{display:block;width:44px;height:5px;border-radius:9px;background:var(--line);margin:8px auto 0;border:0;padding:0}
  .brand{padding-top:8px}
- .ptog{display:flex;position:absolute;bottom:calc(18px + env(safe-area-inset-bottom));left:50%;translate:-50% 0;z-index:4;align-items:center;gap:8px;border:0;border-radius:999px;background:var(--brand);color:var(--brandInk);font-weight:700;padding:0 20px;height:48px;box-shadow:0 4px 14px var(--shadow);white-space:nowrap}
+ .ptog{display:flex;position:absolute;bottom:calc(18px + env(safe-area-inset-bottom));left:50%;translate:-50% 0;z-index:4;align-items:center;gap:8px;border:0;border-radius:999px;background:var(--accent);color:var(--accentInk);font-weight:700;padding:0 20px;height:48px;box-shadow:0 4px 14px var(--shadow);white-space:nowrap}
  .ptog svg{width:20px;height:20px}
  .card{right:10px;left:10px;top:auto;bottom:calc(10px + env(safe-area-inset-bottom));width:auto;max-height:62%}
  .zoom{top:auto;bottom:calc(84px + env(safe-area-inset-bottom));left:10px}
@@ -152,7 +152,7 @@ svg *{vector-effect:non-scaling-stroke}
   <aside class="panel" id="panel" aria-label="שכבות ורשימת מקומות">
     <button class="grab" id="grab" aria-label="סגירת החלונית"></button>
     <div class="brand">
-      <svg viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="22" fill="#2f5d3a"/><path d="M7 31l9-13 6 8 4-5 11 10z" fill="#c9dcb6"/><path d="M22 9c-3.6 0-6.5 2.8-6.5 6.4 0 4.7 6.5 11.1 6.5 11.1s6.5-6.4 6.5-11.1C28.5 11.8 25.6 9 22 9z" fill="#8E1B3B" stroke="#fff" stroke-width="1.6"/><circle cx="22" cy="15.4" r="2.4" fill="#fff"/></svg>
+      <svg viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="22" fill="#4a3a31"/><path d="M7 31l9-13 6 8 4-5 11 10z" fill="#d9bfa6"/><path d="M22 9c-3.6 0-6.5 2.8-6.5 6.4 0 4.7 6.5 11.1 6.5 11.1s6.5-6.4 6.5-11.1C28.5 11.8 25.6 9 22 9z" fill="#8E1B3B" stroke="#fff" stroke-width="1.6"/><circle cx="22" cy="15.4" r="2.4" fill="#fff"/></svg>
       <div><h1>מפה לחיים טובים</h1><p>יקבים, מעיינות, תצפיות ומקומות שווים בכל הארץ</p></div>
     </div>
     <div class="search">

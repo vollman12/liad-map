@@ -1,5 +1,5 @@
 // המפה של ליעד – עובד ברקע: שומר את האפליקציה לשימוש גם בלי קליטה
-const VERSION = 'v1';
+const VERSION = 'v2';
 const APP = 'liadmap-app-' + VERSION, TILES = 'liadmap-tiles';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png'];
 
