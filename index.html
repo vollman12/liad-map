@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>המפה של ליעד</title>
+<meta name="theme-color" content="#2f5d3a">
+<meta name="description" content="מקומות שווים בכל הארץ: יקבים, מעיינות, תצפיות, אוכל טוב ועוד – מהמפה של ליעד וולמן, מורה דרך מהגולן">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="המפה של ליעד">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&family=Rubik:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+/*
+VOICE: a field guide's map: warm, calm, outdoorsy, reads like the guide himself is pointing.
+IDEA: a folded trail map of the land, with coloured pins, one colour per kind of place.
+PICTURE: the map itself, full height, with the land in pale stone, sea and lakes in blue, and borders drawn fine.
+COLOUR and TYPE: stone land, sea blue, deep olive for the chrome, category colours on pins; Rubik for headings, Assistant for text.
+LAYOUT: a side panel on the right (search, regions, layers, list) and the map filling the rest; on a phone, map full screen with a pull-up sheet.
+*/
+:root{color-scheme:light dark;
+--bg:light-dark(#ffffff,#131916);--bg2:light-dark(#f6f5f0,#1a211d);--ink:light-dark(#17221c,#e8eee9);--mute:light-dark(#5b6860,#9daaa2);
+--line:light-dark(#e2e4dd,#2a332e);--brand:light-dark(#2f5d3a,#93cba0);--brandInk:light-dark(#ffffff,#0f1a13);
+--land:light-dark(#f4f0e5,#1f2822);--land2:light-dark(#e4ddcc,#161c18);--sea:light-dark(#a9d3e0,#11303b);--water:light-dark(#3d8aa6,#6bb6cf);
+--bord:light-dark(#8f846c,#66766b);--lab:light-dark(#4f4a3d,#b4beb6);--reg:light-dark(#7a8657,#87a07c);--shadow:light-dark(rgba(30,40,30,.18),rgba(0,0,0,.5))}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Assistant,"Segoe UI",Arial,sans-serif;overflow:hidden}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+h1,h2,h3{font-family:Rubik,Assistant,sans-serif;margin:0}
+.app{display:grid;grid-template-columns:360px minmax(0,1fr);height:100dvh}
+.panel{display:flex;flex-direction:column;background:var(--bg);border-inline-end:1px solid var(--line);z-index:5;min-height:0}
+.brand{display:flex;gap:12px;align-items:center;padding:18px 18px 10px}
+.brand svg{flex:none;width:44px;height:44px}
+.brand h1{font-size:22px;line-height:1.1}
+.brand p{margin:2px 0 0;color:var(--mute);font-size:14px;line-height:1.3}
+.search{padding:6px 18px 10px;position:relative}
+.search input{width:100%;height:46px;border:1px solid var(--line);border-radius:12px;background:var(--bg2);padding:0 42px 0 14px;font-size:16px}
+.search svg{position:absolute;right:30px;top:19px;width:20px;height:20px;color:var(--mute)}
+.tabs{display:flex;gap:4px;padding:0 18px;border-bottom:1px solid var(--line)}
+.tabs button{flex:1;height:44px;border:0;background:none;font-weight:600;color:var(--mute);border-bottom:3px solid transparent}
+.tabs button[aria-selected=true]{color:var(--ink);border-color:var(--brand)}
+.tabs .n{font-weight:400;font-size:14px}
+.scrollp{flex:1;overflow:auto;padding:14px 18px 18px;min-height:0}
+h3{font-size:15px;margin:4px 0 10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px}
+.chips button{border:1px solid var(--line);background:var(--bg2);border-radius:999px;padding:6px 12px;font-size:14px;min-height:36px}
+.chips button:hover{border-color:var(--brand);color:var(--brand)}
+.lh{display:flex;justify-content:space-between;align-items:center}
+.lh button{border:0;background:none;color:var(--brand);font-weight:600;font-size:14px;min-height:36px}
+.layers{list-style:none;margin:0;padding:0}
+.layers label{display:flex;align-items:center;gap:12px;padding:7px 4px;border-radius:10px;cursor:pointer;min-height:48px}
+.layers label:hover{background:var(--bg2)}
+.layers input{position:absolute;opacity:0;pointer-events:none}
+.layers .t{flex:1;font-weight:600}
+.layers .c{color:var(--mute);font-size:14px;font-variant-numeric:tabular-nums}
+.layers .sw{width:38px;height:22px;border-radius:99px;background:var(--line);position:relative;flex:none;transition:background .2s}
+.layers .sw::after{content:"";position:absolute;top:3px;right:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.3);transition:transform .2s}
+.layers input:checked~.sw{background:var(--brand)}
+.layers input:checked~.sw::after{transform:translateX(-16px)}
+.layers input:focus-visible~.sw{outline:3px solid var(--brand);outline-offset:2px}
+.layers li.empty{opacity:.5}
+.ic{width:32px;height:32px;border-radius:50%;background:var(--c);color:#fff;display:grid;place-items:center;flex:none;box-shadow:0 0 0 2px var(--bg)}
+.ic svg{width:18px;height:18px}
+.list{list-style:none;margin:0;padding:0}
+.list button{display:flex;gap:12px;align-items:center;width:100%;text-align:start;border:0;background:none;padding:8px 4px;border-radius:10px;min-height:52px}
+.list button:hover{background:var(--bg2)}
+.list b{display:block;font-weight:600;line-height:1.25}
+.list small{color:var(--mute);font-size:13px}
+.hint{color:var(--mute);font-size:14px;margin:0 0 10px}
+.pfoot{border-top:1px solid var(--line);padding:12px 18px 14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pfoot p{margin:0;width:100%;font-size:13px;color:var(--mute)}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--bg2);border-radius:10px;padding:0 12px;min-height:40px;font-size:14px;font-weight:600;text-decoration:none;color:var(--ink)}
+.btn input{display:none}
+.btn.pri{background:var(--brand);border-color:var(--brand);color:var(--brandInk)}
+.map{position:relative;overflow:hidden;background:var(--sea);touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+.map.drag{cursor:grabbing}
+.map>svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.ov{position:absolute;inset:0;pointer-events:none}
+.tiles{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0}.tiles img{position:absolute;left:0;top:0;width:256px;height:256px;transform-origin:0 0;opacity:0;transition:opacity .25s;max-width:none}.tiles img.ok{opacity:1}.tiles img.old{z-index:0}.tiles img.cur{z-index:1}
+.street #labels,.street>svg{visibility:hidden}.street .tiles{background:#f2efe9}
+.attr{position:absolute;right:6px;bottom:4px;z-index:3;font-size:11px;background:rgba(255,255,255,.8);color:#333;padding:1px 6px;border-radius:4px;text-decoration:none}
+#install{display:none}#install.show{display:inline-flex}
+.ov>*{position:absolute;left:0;top:0;will-change:transform}
+.l-land{fill:var(--land2)}.l-il{fill:var(--land);stroke:var(--bord);stroke-width:1.1}
+.l-sea{fill:var(--sea)}.l-lake{fill:var(--sea);stroke:var(--water);stroke-width:.8}
+.l-river{fill:none;stroke:var(--water);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.l-dash{fill:none;stroke:var(--bord);stroke-width:1;stroke-dasharray:3 4;opacity:.8}
+.l-coast{fill:none;stroke:var(--water);stroke-width:.9;opacity:.6}
+svg *{vector-effect:non-scaling-stroke}
+.tl{font:600 13px/1 Assistant,sans-serif;color:var(--lab);white-space:nowrap;display:flex;align-items:center;gap:5px;text-shadow:0 0 3px var(--land),0 0 3px var(--land),0 0 2px var(--land)}
+.tl::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--lab);opacity:.7}
+.tl.t1{font-size:15px;font-weight:700}
+.rl{font:500 14px/1 Rubik,sans-serif;color:var(--reg);letter-spacing:.06em;white-space:nowrap;text-shadow:0 0 4px var(--land),0 0 4px var(--land)}
+.rl.cty{color:var(--mute);font-size:15px;text-shadow:none;opacity:.8}
+.rl.wat{color:var(--water);font-style:italic;text-shadow:none}
+.mk{pointer-events:auto;width:36px;height:36px;margin:-18px 0 0 -18px;border-radius:50%;border:2.5px solid #fff;background:var(--c);color:#fff;display:grid;place-items:center;padding:0;box-shadow:0 2px 6px var(--shadow);transition:scale .15s}
+.mk svg{width:19px;height:19px}
+.mk:hover,.mk.sel{scale:1.22;z-index:3}
+.mk.sel{box-shadow:0 0 0 4px color-mix(in srgb,var(--c) 35%,transparent),0 3px 10px var(--shadow)}
+.mk .nm{position:absolute;top:38px;left:50%;translate:-50% 0;white-space:nowrap;font:700 12px/1.1 Assistant,sans-serif;color:var(--ink);background:color-mix(in srgb,var(--bg) 88%,transparent);padding:2px 6px;border-radius:6px;display:none;pointer-events:none}
+.near .mk .nm{display:block}
+.cl{pointer-events:auto;border-radius:50%;border:3px solid color-mix(in srgb,var(--brand) 30%,#fff);background:var(--brand);color:var(--brandInk);font:700 14px/1 Rubik,sans-serif;display:grid;place-items:center;padding:0;box-shadow:0 2px 8px var(--shadow)}
+.cl:hover{filter:brightness(1.12)}
+.zoom{position:absolute;left:14px;top:14px;display:flex;flex-direction:column;background:var(--bg);border-radius:12px;box-shadow:0 2px 10px var(--shadow);overflow:hidden;z-index:4}
+.zoom button{width:44px;height:44px;border:0;background:none;font-size:22px;display:grid;place-items:center}
+.zoom button+button{border-top:1px solid var(--line)}
+.zoom svg{width:20px;height:20px}
+.card{position:absolute;right:14px;top:14px;width:min(360px,calc(100% - 88px));max-height:calc(100% - 28px);overflow:auto;background:var(--bg);border-radius:16px;box-shadow:0 8px 30px var(--shadow);z-index:6;padding:16px 18px 18px;animation:pop .2s ease-out}
+.card[hidden],.toast[hidden]{display:none}
+@keyframes pop{from{opacity:0;translate:0 8px}}
+.card .top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.card .cat{font-weight:700;color:var(--c);font-size:14px;flex:1}
+.card .x{width:40px;height:40px;border:0;border-radius:50%;background:var(--bg2);font-size:20px;display:grid;place-items:center}
+.card h2{font-size:24px;line-height:1.15;text-wrap:balance}
+.card .rg{color:var(--mute);margin:4px 0 12px;font-size:15px}
+.card .ds{white-space:pre-line;margin:0 0 14px;overflow-wrap:anywhere}
+.card .ds a{color:var(--brand)}
+.card .acts{display:flex;flex-wrap:wrap;gap:8px}
+.card .tagdemo{display:inline-block;font-size:12px;color:var(--mute);border:1px dashed var(--line);border-radius:6px;padding:1px 6px;margin-bottom:10px}
+.toast{position:absolute;left:50%;bottom:22px;translate:-50% 0;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:600;z-index:8;box-shadow:0 4px 16px var(--shadow);max-width:90%}
+.ptog,.grab{display:none}
+@media(max-width:760px){
+ .app{grid-template-columns:1fr}
+ .map{grid-row:1;grid-column:1}
+ .panel{position:fixed;inset:auto 0 0 0;height:74dvh;border:0;border-radius:18px 18px 0 0;box-shadow:0 -6px 30px var(--shadow);transform:translateY(100%);transition:transform .28s ease;padding-bottom:env(safe-area-inset-bottom)}
+ .panel.open{transform:none}
+ .grab{display:block;width:44px;height:5px;border-radius:9px;background:var(--line);margin:8px auto 0;border:0;padding:0}
+ .brand{padding-top:8px}
+ .ptog{display:flex;position:absolute;bottom:calc(18px + env(safe-area-inset-bottom));left:50%;translate:-50% 0;z-index:4;align-items:center;gap:8px;border:0;border-radius:999px;background:var(--brand);color:var(--brandInk);font-weight:700;padding:0 20px;height:48px;box-shadow:0 4px 14px var(--shadow);white-space:nowrap}
+ .ptog svg{width:20px;height:20px}
+ .card{right:10px;left:10px;top:auto;bottom:calc(10px + env(safe-area-inset-bottom));width:auto;max-height:62%}
+ .zoom{top:auto;bottom:calc(84px + env(safe-area-inset-bottom));left:10px}
+ .mtitle{display:flex}
+}
+.mtitle{display:none;position:absolute;top:calc(10px + env(safe-area-inset-top));right:10px;left:70px;z-index:4;align-items:center;gap:8px;pointer-events:none}
+.mtitle span{background:var(--bg);border-radius:12px;padding:8px 12px;font:700 16px/1 Rubik,sans-serif;box-shadow:0 2px 10px var(--shadow)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="panel" id="panel" aria-label="שכבות ורשימת מקומות">
+    <button class="grab" id="grab" aria-label="סגירת החלונית"></button>
+    <div class="brand">
+      <svg viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="22" fill="#2f5d3a"/><path d="M7 31l9-13 6 8 4-5 11 10z" fill="#c9dcb6"/><path d="M22 9c-3.6 0-6.5 2.8-6.5 6.4 0 4.7 6.5 11.1 6.5 11.1s6.5-6.4 6.5-11.1C28.5 11.8 25.6 9 22 9z" fill="#8E1B3B" stroke="#fff" stroke-width="1.6"/><circle cx="22" cy="15.4" r="2.4" fill="#fff"/></svg>
+      <div><h1>המפה של ליעד</h1><p>יקבים, מעיינות, תצפיות ומקומות שווים בכל הארץ</p></div>
+    </div>
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder="חיפוש מקום, למשל יקב או עין…" aria-label="חיפוש מקום" autocomplete="off">
+    </div>
+    <div class="tabs" role="tablist">
+      <button role="tab" id="t-layers" aria-selected="true" aria-controls="p-layers">שכבות</button>
+      <button role="tab" id="t-list" aria-selected="false" aria-controls="p-list">באזור המוצג <span class="n" id="cnt"></span></button>
+    </div>
+    <div class="scrollp" id="p-layers" role="tabpanel">
+      <h3>קפיצה לאזור</h3>
+      <div class="chips" id="regions"></div>
+      <div class="lh"><h3>סוגי מקומות</h3><button id="allOn">הצג הכל</button></div>
+      <ul class="layers" id="layers"></ul>
+    </div>
+    <div class="scrollp" id="p-list" role="tabpanel" hidden>
+      <p class="hint" id="listHint"></p>
+      <ul class="list" id="list"></ul>
+    </div>
+    <div class="pfoot">
+      <p id="demoNote">טוען את המקומות…</p>
+      <button class="btn pri" id="install">התקנת האפליקציה</button>
+      <label class="btn">ייבוא קובץ KML<input type="file" id="kml" accept=".kml"></label>
+      <button class="btn" id="clearImp" hidden>הסרת הייבוא</button>
+    </div>
+  </aside>
+
+  <main class="map" id="map" tabindex="0" aria-label="מפת ארץ ישראל. גוררים כדי לזוז, גלגלת או צביטה כדי להתקרב">
+    <svg id="svg" aria-hidden="true"><g id="world"></g></svg>
+    <div class="tiles" id="tiles" aria-hidden="true"></div>
+    <a class="attr ui" id="attr" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener" hidden>© OpenStreetMap</a>
+    <div class="ov" id="labels"></div>
+    <div class="ov" id="markers"></div>
+    <div class="mtitle"><span>המפה של ליעד</span></div>
+    <div class="zoom ui">
+      <button id="zin" aria-label="התקרבות">+</button>
+      <button id="zout" aria-label="התרחקות">−</button>
+      <button id="zmode" aria-label="החלפה בין מפת רחובות למפה מאוירת" title="מפת רחובות / מפה מאוירת" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg></button>
+      <button id="zhome" aria-label="כל הארץ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 7l5-2 6 2 5-2v12l-5 2-6-2-5 2z"/><path d="M9 5v12M15 7v12"/></svg></button>
+    </div>
+    <button class="ptog ui" id="ptog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg>שכבות ורשימה</button>
+    <article class="card ui" id="card" hidden aria-live="polite"></article>
+    <div class="toast ui" id="toast" hidden role="status"></div>
+  </main>
+</div>
+
+
+
+<script>
+{
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+
+/* ---------- סוגי מקומות ואייקונים ---------- */
+const I=(p)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+const CATS={
+ food:{n:'אוכל טוב',c:'#D9480F',i:I('<path d="M7 3v8M4.8 3v5a2.2 2.2 0 0 0 4.4 0V3M7 11v10M17 3c-1.8 1-2.8 3-2.8 6.2 0 2.2 1.1 3.3 2.8 3.3V21"/>')},
+ cafe:{n:'קפה ומאפים',c:'#8A5A35',i:I('<path d="M4 9h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z" fill="currentColor" fill-opacity=".3"/><path d="M16 10.5h1.5a2.5 2.5 0 0 1 0 5H16M8 3.5c-.8 1 .8 2 0 3M12 3.5c-.8 1 .8 2 0 3"/>')},
+ winery:{n:'יקבים',c:'#8E1B3B',i:I('<path d="M7.5 3h9l-.6 5.5a3.9 3.9 0 0 1-7.8 0z" fill="currentColor" fill-opacity=".35"/><path d="M12 12.5V20M8.5 20.5h7"/>')},
+ beer:{n:'מבשלות ובירה',c:'#E08A00',i:I('<path d="M5 7h10v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z" fill="currentColor" fill-opacity=".3"/><path d="M15 10h2a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-2M5 7c0-2 1.5-3.5 3.5-3.2C9.5 2.5 12.5 2.5 13.4 4 15 4 15.6 5.6 15 7M8.5 11v6M11.5 11v6"/>')},
+ spring:{n:'מעיינות ומים',c:'#1D86C8',i:I('<path d="M12 3s6 6.4 6 10.8a6 6 0 0 1-12 0C6 9.4 12 3 12 3z" fill="currentColor" fill-opacity=".3"/>')},
+ trail:{n:'מסלולים וטבע',c:'#1F7A5C',i:I('<circle cx="13" cy="4.5" r="1.8" fill="currentColor"/><path d="M11 21l2-6 2.5 2.5V21M9 12l2-4 3 1.5 2 3M11 8l-1.5 5.5L13 15M7.5 21l2-5"/>')},
+ view:{n:'תצפיות',c:'#6E3FA3',i:I('<path d="M2.5 12S6.2 6 12 6s9.5 6 9.5 6-3.7 6-9.5 6-9.5-6-9.5-6z"/><circle cx="12" cy="12" r="2.8" fill="currentColor"/>')},
+ producer:{n:'חוות ותוצרת מקומית',c:'#5E8C1F',i:I('<path d="M5 19C5 10.5 10 5 20 5c0 10-6 15-15 14z" fill="currentColor" fill-opacity=".3"/><path d="M5 19c3-4.5 6.5-7.5 10.5-9.5"/>')},
+ attraction:{n:'חאנים ואטרקציות',c:'#C2185B',i:I('<path d="M12 20s-7.5-4.4-7.5-10A4.3 4.3 0 0 1 12 7.3 4.3 4.3 0 0 1 19.5 10c0 5.6-7.5 10-7.5 10z" fill="currentColor" fill-opacity=".3"/>')},
+ lodging:{n:'לינה',c:'#3F51B5',i:I('<path d="M3 19V7M3 15h18v4M21 15v-2.5A3.5 3.5 0 0 0 17.5 9H11v6"/><circle cx="7" cy="11.5" r="1.8" fill="currentColor"/>')},
+ heritage:{n:'היסטוריה ומורשת',c:'#6B5B4B',i:I('<path d="M12 3l8 5H4z" fill="currentColor" fill-opacity=".3"/><path d="M4 8h16M6.5 8v9M10 8v9M14 8v9M17.5 8v9M3.5 20h17"/>')},
+ nature:{n:'גנים ושמורות',c:'#3D7A2A',i:I('<path d="M12 3l-6 8h3.2L5 17h14l-4.2-6H18z" fill="currentColor" fill-opacity=".3"/><path d="M12 17v4"/>')},
+ other:{n:'עוד מקומות',c:'#5B6770',i:I('<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" fill="currentColor" fill-opacity=".3"/>')}
+};
+const guessCat=t=>{t=(t||'').toLowerCase();
+ const R=[['winery',/יקב|יין|wine|winery|vineyard|כרם/],['lodging',/צימר|לינה|מלון|אכסני|קמפינג|חניון לילה|בקתות|אירוח|hotel|lodg|zimmer|camp|guest/],['beer',/בירה|מבשל|מזקק|beer|brew/],['cafe',/קפה|מאפ|קונדיטור|פטיסרי|cafe|coffee|bakery/],['food',/מסעד|אוכל|פיצ|חומוס|בשר|דגים|גלידה|restaurant|cafe|coffee|food|bakery/],['producer',/מחלב|גבינ|דבש|שמן זית|בית בד|חווה|משק|שוקולד|farm|dairy|cheese|honey|olive|brew/],['spring',/מעיין|עין |^עין|בריכ|מפל|מים|spring|pool|waterfall/],['view',/תצפית|מצפה|נוף|view|lookout|observ/],['attraction',/חאן|אטרקצי|attraction/],['heritage',/עתיק|מבצר|בית כנסת|כנסי|מסגד|היסטור|^תל |ארכיא|מוזיאון|אנדרטה|מורשת|fort|museum|church|synagog|ancient|histor/],['trail',/מסלול|שביל|טיול|נחל|trail|hike/],['nature',/שמור|גן לאומי|יער|פארק|טבע|reserve|forest|park|nature/]];
+ for(const [c,r] of R) if(r.test(t)) return c; return 'other'};
+
+/* ---------- אזורים ---------- */
+const REG=[ // [שם, דרום, צפון, מערב, מזרח]
+ ['כנרת',32.69,32.92,35.49,35.66],['דרום הרמה',32.66,32.97,35.60,35.92],['צפון הרמה והחרמון',32.97,33.42,35.62,35.92],
+ ['גליל עליון',32.88,33.30,35.08,35.62],['גליל תחתון ועמקים',32.45,32.88,35.12,35.60],['כרמל וחוף הצפון',32.40,33.10,34.85,35.12],
+ ['ירושלים והסביבה',31.60,31.95,34.98,35.35],['ים המלח',31.00,31.85,35.25,35.62],['בקעת הירדן',31.85,32.45,35.30,35.62],
+ ['מרכז ושרון',31.70,32.40,34.60,35.05],['שפלה וצפון הנגב',31.00,31.70,34.20,35.25],['הנגב',30.40,31.00,34.20,35.40],['ערבה ואילת',29.40,30.40,34.60,35.40]];
+const JUMP=['צפון הרמה והחרמון','דרום הרמה','כנרת','גליל עליון','גליל תחתון ועמקים','כרמל וחוף הצפון','מרכז ושרון','ירושלים והסביבה','ים המלח','הנגב','ערבה ואילת'];
+const regionOf=p=>{for(const r of REG) if(p.lat>=r[1]&&p.lat<=r[2]&&p.lon>=r[3]&&p.lon<=r[4]) return r[0];return ''};
+const HOME=[29.45,33.36,34.22,35.92];
+
+/* ---------- הטלה ---------- */
+const X=lon=>(lon+180)/360*256, Y=lat=>{const r=lat*Math.PI/180;return (1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2*256};
+const pth=(pts,close=true)=>'M'+pts.map(([a,o])=>X(o).toFixed(6)+' '+Y(a).toFixed(6)).join('L')+(close?'Z':'');
+
+/* ---------- מפת הבסיס (קווי מתאר משוערים) ---------- */
+const COAST=[[33.093,35.105],[33.04,35.10],[33.006,35.09],[32.96,35.075],[32.925,35.07],[32.88,35.08],[32.84,35.076],[32.815,35.045],[32.815,35.0],[32.828,34.965],[32.833,34.955],[32.80,34.953],[32.74,34.944],[32.69,34.93],[32.61,34.915],[32.55,34.90],[32.50,34.889],[32.44,34.87],[32.33,34.846],[32.25,34.825],[32.17,34.80],[32.10,34.774],[32.05,34.75],[32.00,34.735],[31.93,34.69],[31.86,34.665],[31.80,34.635],[31.72,34.585],[31.67,34.55],[31.596,34.49],[31.52,34.43],[31.42,34.34],[31.32,34.22]];
+const NORTH=[[33.093,35.105],[33.083,35.15],[33.10,35.21],[33.09,35.30],[33.085,35.37],[33.07,35.42],[33.09,35.48],[33.11,35.515],[33.17,35.535],[33.235,35.555],[33.285,35.573],[33.275,35.60],[33.27,35.625],[33.30,35.67],[33.32,35.73],[33.34,35.79],[33.31,35.80],[33.27,35.795],[33.20,35.80],[33.12,35.815],[33.05,35.84],[32.98,35.865],[32.90,35.875],[32.83,35.86],[32.77,35.845],[32.745,35.83]];
+const YARMUK=[[32.745,35.83],[32.72,35.79],[32.70,35.74],[32.685,35.665],[32.665,35.62],[32.645,35.575]];
+const JORDAN_S=[[32.645,35.575],[32.55,35.562],[32.45,35.565],[32.35,35.555],[32.25,35.545],[32.10,35.54],[31.98,35.545],[31.87,35.54],[31.77,35.556]];
+const EAST_S=[[31.77,35.556],[31.60,35.50],[31.40,35.48],[31.25,35.47],[31.12,35.45],[31.02,35.44],[30.85,35.33],[30.65,35.22],[30.45,35.165],[30.20,35.13],[30.00,35.085],[29.80,35.035],[29.62,35.005],[29.545,34.983],[29.553,34.962],[29.535,34.92],[29.49,34.902]];
+const EGYPT=[[29.49,34.902],[29.70,34.82],[30.00,34.71],[30.30,34.585],[30.60,34.485],[30.88,34.41],[31.10,34.33],[31.22,34.275],[31.32,34.22]];
+const AREA=[...NORTH,...YARMUK.slice(1),...JORDAN_S.slice(1),...EAST_S.slice(1),...EGYPT.slice(1),...COAST.slice().reverse().slice(1)];
+const SEA=[[37.5,35.95],[35.5,35.95],[34.3,35.68],[33.9,35.49],[33.56,35.37],[33.45,35.29],[33.27,35.19],[33.12,35.14],...COAST,[31.21,34.10],[31.13,33.80],[31.08,33.40],[31.05,32.6],[31.2,32.2],[31.35,30.5],[31.5,28],[37.5,28]];
+const GULF=[[29.553,34.962],[29.545,34.985],[29.53,35.005],[29.40,34.98],[29.29,34.945],[29.0,34.86],[28.0,34.62],[27.0,34.3],[27.0,33.9],[28.0,34.4],[28.97,34.65],[29.20,34.80],[29.40,34.865],[29.49,34.902],[29.535,34.92]];
+const KINNERET=[[32.88,35.57],[32.905,35.615],[32.87,35.642],[32.83,35.652],[32.78,35.646],[32.73,35.632],[32.705,35.595],[32.725,35.565],[32.79,35.545],[32.82,35.516],[32.85,35.514],[32.872,35.54]];
+const DEADSEA=[[31.765,35.48],[31.76,35.53],[31.765,35.565],[31.72,35.587],[31.60,35.578],[31.45,35.572],[31.36,35.555],[31.36,35.51],[31.27,35.48],[31.27,35.425],[31.32,35.405],[31.38,35.395],[31.46,35.395],[31.55,35.41],[31.65,35.432],[31.72,35.455]];
+const PONDS=[[31.22,35.37],[31.20,35.405],[31.10,35.425],[31.045,35.405],[31.10,35.37],[31.18,35.36]];
+const JORDAN_N=[[33.25,35.65],[33.18,35.62],[33.10,35.615],[33.04,35.62],[33.00,35.632],[32.95,35.625],[32.905,35.616]];
+const GREEN=[[32.41,35.555],[32.47,35.47],[32.52,35.40],[32.55,35.32],[32.53,35.22],[32.50,35.12],[32.42,35.06],[32.33,35.03],[32.25,35.00],[32.18,34.96],[32.10,34.98],[32.00,35.00],[31.90,35.01],[31.84,34.98],[31.82,35.06],[31.79,35.15],[31.78,35.22],[31.74,35.15],[31.70,35.07],[31.65,34.97],[31.55,34.90],[31.43,34.88],[31.36,34.95],[31.34,35.08],[31.36,35.25],[31.42,35.33],[31.48,35.395]];
+const GAZA=[[31.596,34.49],[31.56,34.56],[31.47,34.52],[31.36,34.40],[31.22,34.275]];
+$('#world').innerHTML=
+ `<rect class="l-land" x="${X(28)}" y="${Y(37.5)}" width="${X(41)-X(28)}" height="${Y(25)-Y(37.5)}"/>`+
+ `<path class="l-il" d="${pth(AREA)}"/>`+
+ `<path class="l-sea" d="${pth(SEA)}"/><path class="l-sea" d="${pth(GULF)}"/>`+
+ `<path class="l-coast" d="${pth(COAST,false)}"/>`+
+ `<path class="l-dash" d="${pth(GREEN,false)}"/><path class="l-dash" d="${pth(GAZA,false)}"/>`+
+ `<path class="l-river" d="${pth(JORDAN_N,false)}"/><path class="l-river" d="${pth(JORDAN_S,false)}"/><path class="l-river" d="${pth(YARMUK,false)}"/>`+
+ `<path class="l-lake" d="${pth(KINNERET)}"/><path class="l-lake" d="${pth(DEADSEA)}"/><path class="l-lake" d="${pth(PONDS)}"/>`;
+
+/* ---------- שמות ישובים ואזורים ---------- */
+const TOWNS=[['ירושלים',31.768,35.214,1],['תל אביב',32.085,34.781,1],['חיפה',32.794,34.99,1],['באר שבע',31.252,34.791,1],['אילת',29.558,34.952,1],['טבריה',32.795,35.531,1],
+['קריית שמונה',33.207,35.570,2],['קצרין',32.993,35.690,2],['צפת',32.966,35.496,2],['נהריה',33.006,35.095,2],['עכו',32.927,35.081,2],['כרמיאל',32.919,35.296,2],['נצרת',32.700,35.297,2],['עפולה',32.607,35.289,2],['בית שאן',32.497,35.497,2],['חדרה',32.434,34.919,2],['נתניה',32.321,34.853,2],['אשדוד',31.804,34.655,2],['אשקלון',31.669,34.571,2],['ערד',31.259,35.212,2],['דימונה',31.069,35.033,2],['מצפה רמון',30.610,34.801,2],['מודיעין',31.900,35.010,2],['בית שמש',31.750,34.990,2],['מג׳דל שמס',33.268,35.770,2],['עין גדי',31.450,35.383,2],['ירוחם',30.990,34.930,2],
+['מטולה',33.278,35.578,3],['ראש פינה',32.969,35.543,3],['חספין',32.846,35.790,3],['רמת מגשימים',32.851,35.813,3],['בני יהודה',32.800,35.690,3],['אפיק',32.780,35.700,3],['מבוא חמה',32.738,35.651,3],['עין גב',32.782,35.641,3],['זכרון יעקב',32.572,34.952,3],['יקנעם',32.660,35.110,3],['מסעדה',33.233,35.755,3],['מרום גולן',33.130,35.775,3],['אל רום',33.172,35.770,3],['עין זיוון',33.100,35.790,3],['נווה אטי״ב',33.262,35.742,3],['עין בוקק',31.200,35.360,3],['שדה בוקר',30.870,34.790,3],['חצבה',30.780,35.240,3],['יטבתה',29.895,35.060,3],['רחובות',31.894,34.811,3],['כפר סבא',32.178,34.907,3],['שדרות',31.525,34.596,3],['קריית גת',31.610,34.764,3],['ערערה',32.497,35.100,3]];
+const AREAS=[ // [טקסט, lat, lon, מזום, עד זום, סוג]
+['לבנון',33.38,35.42,0,99,'cty'],['סוריה',33.05,36.12,0,99,'cty'],['ירדן',31.40,35.85,0,99,'cty'],['מצרים',30.30,34.05,0,99,'cty'],
+['הים התיכון',32.35,34.40,0,6,'wat'],['ים המלח',31.53,35.49,1.3,99,'wat'],['ים כנרת',32.82,35.595,2.2,99,'wat'],['מפרץ אילת',29.42,34.93,2,99,'wat'],
+['רמת הגולן',33.00,35.78,0,4,''],['החרמון',33.35,35.77,2,99,''],['הגליל העליון',33.03,35.38,1.3,6,''],['הגליל התחתון',32.76,35.40,1.6,6,''],['עמק יזרעאל',32.63,35.20,1.8,7,''],['הכרמל',32.70,35.03,1.8,8,''],['השרון',32.25,34.90,1.6,6,''],['השפלה',31.72,34.85,1.6,6,''],['הרי ירושלים',31.80,35.08,2.4,8,''],['מדבר יהודה',31.60,35.28,1.3,6,''],['הנגב',31.00,34.68,0,5,''],['הר הנגב',30.72,34.86,2,7,''],['הערבה',30.35,35.10,0,6,''],['בקעת הירדן',32.05,35.47,2,7,''],['עמק החולה',33.10,35.60,3.5,10,''],['דרום הרמה',32.80,35.80,4,12,''],['צפון הרמה',33.17,35.73,4,12,'']];
+
+/* ---------- נתונים ---------- */
+let BASE=[];
+let IMP=store.get('liadmap-imported',[]);
+let ALL=[];
+const build=()=>{ALL=[...BASE,...IMP].map((p,i)=>({...p,id:i,c:CATS[p.c]?p.c:'other',x:X(p.lon),y:Y(p.lat),r:regionOf(p)}));
+ $('#demoNote').textContent=BASE.length?`${ALL.length.toLocaleString('he-IL')} מקומות במפה`+(IMP.length?`, כולל ${IMP.length} מקובץ שייבאת (נשמרים רק בדפדפן הזה).`:'.'):'טוען את המקומות…';
+ $('#clearImp').hidden=!IMP.length};
+build();
+let on=new Set(store.get('liadmap-on',Object.keys(CATS)));
+let q='';
+
+/* ---------- מצב מפה ---------- */
+const map=$('#map'),world=$('#world'),mkL=$('#markers'),lbL=$('#labels');
+let W=0,H=0,s=1,tx=0,ty=0,fitS=1,clS=0,sel=null,anim=null;
+const fit=(b,pad=30)=>{const x0=X(b[2]),x1=X(b[3]),y0=Y(b[1]),y1=Y(b[0]);
+ const ns=Math.min((W-2*pad)/(x1-x0),(H-2*pad)/(y1-y0));return {s:ns,tx:W/2-ns*(x0+x1)/2,ty:H/2-ns*(y0+y1)/2}};
+const clampS=v=>Math.max(fitS*.6,Math.min(2**18.5,v));
+
+/* תוויות */
+lbL.innerHTML=TOWNS.map(t=>`<div class="tl t${t[3]}">${t[0]}</div>`).join('')+AREAS.map(a=>`<div class="rl ${a[5]}">${a[0]}</div>`).join('');
+const lbNodes=[...lbL.children];
+const LB=[...TOWNS.map(t=>({x:X(t[2]),y:Y(t[1]),min:t[3]==1?0:t[3]==2?2.3:5,max:999,t:1})),...AREAS.map(a=>({x:X(a[2]),y:Y(a[1]),min:a[3],max:a[4]}))];
+
+const visible=()=>ALL.filter(p=>on.has(p.c)&&(!q||(p.n+' '+(p.d||'')+' '+CATS[p.c].n+' '+p.r).toLowerCase().includes(q)));
+let groups=[];
+const cluster=()=>{clS=s;const pts=visible();groups=[];
+ const cen=g=>{g.x=g.items.reduce((a,p)=>a+p.x,0)/g.items.length;g.y=g.items.reduce((a,p)=>a+p.y,0)/g.items.length};
+ if(s>=fitS*22){ // קרוב: בלי קיבוץ; נקודות שנופלות זו על זו נפרשות במעגל
+  const mx=60/s,vx0=-tx/s-mx,vx1=(W-tx)/s+mx,vy0=-ty/s-mx,vy1=(H-ty)/s+mx,r=26/s,bk=[];
+  for(const p of pts){if(p.x<vx0||p.x>vx1||p.y<vy0||p.y>vy1)continue;const b=bk.find(b=>Math.abs(b.x-p.x)<r&&Math.abs(b.y-p.y)<r);if(b)b.a.push(p);else bk.push({x:p.x,y:p.y,a:[p]})}
+  for(const b of bk){const n=b.a.length,cx=b.a.reduce((a,p)=>a+p.x,0)/n,cy=b.a.reduce((a,p)=>a+p.y,0)/n,R=n>1?Math.min(80,20+n*6):0;
+   b.a.forEach((p,i)=>{const t=-Math.PI/2+i*2*Math.PI/n;groups.push({items:[p],x:n>1?cx:p.x,y:n>1?cy:p.y,dx:R*Math.cos(t),dy:R*Math.sin(t)})})}
+ }else{
+  const r=36/s,grid=new Map();
+  for(const p of pts){const k=Math.floor(p.x/r)+','+Math.floor(p.y/r);let g=grid.get(k);if(!g){g={items:[]};grid.set(k,g);groups.push(g)}g.items.push(p)}
+  groups.forEach(cen);groups.sort((a,b)=>b.items.length-a.items.length);
+  const kept=[],m=48/s;
+  for(const g of groups){const t=kept.find(k=>Math.abs(k.x-g.x)<m&&Math.abs(k.y-g.y)<m);if(t){t.items.push(...g.items);cen(t)}else kept.push(g)}
+  groups=kept}
+ mkL.innerHTML=groups.map((g,i)=>{if(g.items.length==1){const p=g.items[0],c=CATS[p.c];return `<button class="mk${sel===p.id?' sel':''}" data-id="${p.id}" style="--c:${c.c}" aria-label="${esc(p.n)}, ${c.n}">${c.i}<span class="nm">${esc(p.n)}</span></button>`}
+  const n=g.items.length,d=Math.min(56,34+Math.log2(n)*5);return `<button class="cl" data-g="${i}" style="width:${d}px;height:${d}px;margin:${-d/2}px 0 0 ${-d/2}px" aria-label="${n} מקומות, לחיצה להתקרבות">${n}</button>`}).join('');
+ placeMarkers()};
+const placeMarkers=()=>{const ns=mkL.children;for(let i=0;i<ns.length;i++){const g=groups[i];ns[i].style.transform=`translate(${(g.x*s+tx+(g.dx||0)).toFixed(1)}px,${(g.y*s+ty+(g.dy||0)).toFixed(1)}px)`}};
+const apply=()=>{world.setAttribute('transform',`matrix(${s} 0 0 ${s} ${tx} ${ty})`);
+ const z=s/fitS;
+ LB.forEach((l,i)=>{const n=lbNodes[i],show=z>=l.min&&z<l.max;n.style.display=show?'':'none';if(show)n.style.transform=`translate(${(l.x*s+tx).toFixed(1)}px,${(l.y*s+ty).toFixed(1)}px) translate(${l.t?'-6px':'-50%'},-50%)`});
+ map.classList.toggle('near',z>=30);
+ if(!clS||Math.abs(Math.log(s/clS))>.06)cluster();else placeMarkers();
+ drawTiles();schedList()};
+/* ---------- מפת רחובות (אריחים) ---------- */
+const tilesEl=$('#tiles'),tileEls=new Map();let tilesOK=null,tErr=0,mode=store.get('liadmap-mode','street');
+const TILE=(z,x,y)=>`https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
+const applyMode=()=>{const st=mode=='street'&&tilesOK===true;map.classList.toggle('street',st);$('#attr').hidden=!st;$('#zmode').hidden=tilesOK!==true;tilesEl.style.display=mode=='street'&&tilesOK!==false?'':'none'};
+const drawTiles=()=>{if(mode!='street'||tilesOK===false||!W)return;
+ const tz=Math.max(2,Math.min(19,Math.round(Math.log2(s)))),n=2**tz,ts=256/n*s;
+ const x0=Math.floor(-tx/ts),x1=Math.floor((W-tx)/ts),y0=Math.max(0,Math.floor(-ty/ts)),y1=Math.min(n-1,Math.floor((H-ty)/ts));
+ const need=new Set();let all=true;
+ for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const k=tz+'/'+x+'/'+y;need.add(k);let im=tileEls.get(k);
+  if(!im){im=new Image();im.alt='';im.decoding='async';im.dataset.z=tz;im.dataset.x=x;im.dataset.y=y;
+   im.onload=()=>{im.classList.add('ok');if(tilesOK!==true){tilesOK=true;applyMode()}};
+   im.onerror=()=>{tErr++;if(tilesOK===null&&tErr>3){tilesOK=false;applyMode()}};
+   im.src=TILE(tz,((x%n)+n)%n,y);tilesEl.appendChild(im);tileEls.set(k,im)}
+  if(!im.classList.contains('ok'))all=false}
+ for(const [k,im] of tileEls){const z=+im.dataset.z,m=256/2**z*s;
+  if(z==tz&&!need.has(k)||z!=tz&&all||Math.abs(z-tz)>3){im.remove();tileEls.delete(k);continue}
+  im.classList.toggle('cur',z==tz);im.classList.toggle('old',z!=tz);
+  im.style.transform=`translate(${(+im.dataset.x*m+tx).toFixed(1)}px,${(+im.dataset.y*m+ty).toFixed(1)}px) scale(${m/256})`}};
+$('#zmode').onclick=()=>{mode=mode=='street'?'art':'street';store.set('liadmap-mode',mode);applyMode();drawTiles()};
+const zoomAt=(f,px,py)=>{const ns=clampS(s*f);f=ns/s;tx=px-(px-tx)*f;ty=py-(py-ty)*f;s=ns};
+const flyTo=(t,ms=650)=>{cancelAnimationFrame(anim);const s0=s,c0=[(W/2-tx)/s,(H/2-ty)/s],s1=clampS(t.s),c1=[(W/2-t.tx)/t.s,(H/2-t.ty)/t.s],t0=performance.now();
+ if(matchMedia('(prefers-reduced-motion: reduce)').matches)ms=1;
+ const step=now=>{let k=Math.min(1,(now-t0)/ms);k=k<.5?4*k*k*k:1-Math.pow(-2*k+2,3)/2;
+  s=Math.exp(Math.log(s0)+(Math.log(s1)-Math.log(s0))*k);const cx=c0[0]+(c1[0]-c0[0])*k,cy=c0[1]+(c1[1]-c0[1])*k;tx=W/2-cx*s;ty=H/2-cy*s;apply();
+  if(k<1)anim=requestAnimationFrame(step);else{cluster();updList()}};anim=requestAnimationFrame(step)};
+const centerOn=(x,y,z)=>{const ns=clampS(z);flyTo({s:ns,tx:W/2-x*ns,ty:H/2-y*ns})};
+
+/* ---------- גודל ---------- */
+let first=true;
+new ResizeObserver(()=>{const nw=map.clientWidth,nh=map.clientHeight;if(!nw||!nh)return;
+ if(first){W=nw;H=nh;const f=fit(HOME,24);fitS=f.s;s=f.s;tx=f.tx;ty=f.ty;first=false}
+ else{tx+=(nw-W)/2;ty+=(nh-H)/2;W=nw;H=nh;fitS=fit(HOME,24).s}
+ apply()}).observe(map);
+
+/* ---------- מחוות ---------- */
+const ptrs=new Map();let moved=false,down=null;
+const rel=e=>{const r=map.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top}};
+map.addEventListener('pointerdown',e=>{if(e.target.closest('.ui'))return;if(e.button>0)return;cancelAnimationFrame(anim);ptrs.set(e.pointerId,rel(e));if(ptrs.size==1){moved=false;down=rel(e)}map.classList.add('drag')});
+addEventListener('pointermove',e=>{if(!ptrs.has(e.pointerId))return;const cur=rel(e);
+ if(ptrs.size==1){const p=ptrs.get(e.pointerId);tx+=cur.x-p.x;ty+=cur.y-p.y}
+ else{const [a,b]=[...ptrs.values()],om={x:(a.x+b.x)/2,y:(a.y+b.y)/2},od=Math.hypot(a.x-b.x,a.y-b.y)||1;ptrs.set(e.pointerId,cur);
+  const [c,d]=[...ptrs.values()],nm={x:(c.x+d.x)/2,y:(c.y+d.y)/2},nd=Math.hypot(c.x-d.x,c.y-d.y)||1;zoomAt(nd/od,nm.x,nm.y);tx+=nm.x-om.x;ty+=nm.y-om.y;moved=true}
+ ptrs.set(e.pointerId,cur);if(down&&Math.hypot(cur.x-down.x,cur.y-down.y)>6)moved=true;apply()});
+const up=e=>{if(!ptrs.delete(e.pointerId))return;if(!ptrs.size){map.classList.remove('drag');cluster();updList()}};
+addEventListener('pointerup',up);addEventListener('pointercancel',up);
+map.addEventListener('wheel',e=>{if(e.target.closest('.card'))return;e.preventDefault();cancelAnimationFrame(anim);const p=rel(e),d=e.deltaY*(e.deltaMode==1?33:1);zoomAt(Math.exp(-d*.0022),p.x,p.y);apply();clearTimeout(map._w);map._w=setTimeout(()=>{cluster();updList()},160)},{passive:false});
+map.addEventListener('dblclick',e=>{if(e.target.closest('.ui,.mk,.cl'))return;const p=rel(e),ns=clampS(s*2.2),f=ns/s;flyTo({s:ns,tx:p.x-(p.x-tx)*f,ty:p.y-(p.y-ty)*f},380)});
+const zoomBtn=f=>{const ns=clampS(s*f),k=ns/s;flyTo({s:ns,tx:W/2-(W/2-tx)*k,ty:H/2-(H/2-ty)*k},300)};
+$('#zin').onclick=()=>zoomBtn(2);$('#zout').onclick=()=>zoomBtn(.5);$('#zhome').onclick=()=>flyTo(fit(HOME,24));
+map.addEventListener('keydown',e=>{if(e.target!==map)return;const m={ArrowLeft:[80,0],ArrowRight:[-80,0],ArrowUp:[0,80],ArrowDown:[0,-80]}[e.key];
+ if(m){tx+=m[0];ty+=m[1];apply();updList();e.preventDefault()}else if(e.key=='+'||e.key=='=')zoomBtn(1.6);else if(e.key=='-')zoomBtn(.625)});
+
+mkL.addEventListener('click',e=>{if(moved)return;const b=e.target.closest('button');if(!b)return;
+ if(b.dataset.id!=null){open(ALL[+b.dataset.id],false);return}
+ const g=groups[+b.dataset.g];if(!g)return;const xs=g.items.map(p=>p.x),ys=g.items.map(p=>p.y),x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
+ const span=Math.max((x1-x0)/(W-140),(y1-y0)/(H-140));const ns=span*s>2?Math.min(1/span,s*6):fitS*24;centerOn((x0+x1)/2,(y0+y1)/2,Math.max(ns,s*1.8))});
+
+/* ---------- כרטיס מקום ---------- */
+const card=$('#card');
+const linkify=t=>esc(t).replace(/https?:\/\/[^\s<]+/g,u=>`<a href="${u}" target="_blank" rel="noopener">קישור</a>`);
+const open=(p,fly=true)=>{sel=p.id;const c=CATS[p.c];
+ card.style.setProperty('--c',c.c);
+ card.innerHTML=`<div class="top"><span class="ic" style="--c:${c.c}">${c.i}</span><span class="cat">${c.n}</span><button class="x" aria-label="סגירה">×</button></div>
+ <h2>${esc(p.n)}</h2><p class="rg">${esc(p.r||'')}</p>
+ ${p.d?`<p class="ds">${linkify(p.d)}</p>`:''}
+ <div class="acts"><a class="btn pri" href="https://waze.com/ul?ll=${p.lat},${p.lon}&navigate=yes" target="_blank" rel="noopener">ניווט ב-Waze</a><a class="btn" href="https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lon}" target="_blank" rel="noopener">Google Maps</a><button class="btn zm">התקרבות</button></div>`;
+ card.hidden=false;card.querySelector('.x').onclick=close;card.querySelector('.zm').onclick=()=>centerOn(p.x,p.y,Math.max(s,fitS*14));
+ for(const b of mkL.querySelectorAll('.mk'))b.classList.toggle('sel',+b.dataset.id===p.id);
+ if(fly){$('#panel').classList.remove('open');centerOn(p.x,p.y,Math.max(s,fitS*7))}};
+const close=()=>{card.hidden=true;sel=null;for(const b of mkL.querySelectorAll('.mk.sel'))b.classList.remove('sel')};
+addEventListener('keydown',e=>{if(e.key=='Escape'){if(!card.hidden)close();else $('#panel').classList.remove('open')}});
+
+/* ---------- שכבות ---------- */
+const renderLayers=()=>{const cnt={};ALL.forEach(p=>cnt[p.c]=(cnt[p.c]||0)+1);
+ $('#layers').innerHTML=Object.entries(CATS).filter(([k])=>cnt[k]||k=='lodging').map(([k,c])=>`<li class="${cnt[k]?'':'empty'}"><label><span class="ic" style="--c:${c.c}">${c.i}</span><span class="t">${c.n}</span><span class="c">${cnt[k]||0}</span><input type="checkbox" data-k="${k}" ${on.has(k)?'checked':''}><span class="sw"></span></label></li>`).join('');
+ $('#allOn').textContent=on.size==Object.keys(CATS).length?'הסתר הכל':'הצג הכל'};
+$('#layers').addEventListener('change',e=>{const k=e.target.dataset.k;e.target.checked?on.add(k):on.delete(k);store.set('liadmap-on',[...on]);renderLayers();cluster();updList()});
+$('#allOn').onclick=()=>{on=on.size==Object.keys(CATS).length?new Set():new Set(Object.keys(CATS));store.set('liadmap-on',[...on]);renderLayers();cluster();updList()};
+$('#regions').innerHTML=`<button data-r="home">כל הארץ</button>`+JUMP.map(n=>`<button data-r="${n}">${n}</button>`).join('');
+$('#regions').onclick=e=>{const b=e.target.closest('button');if(!b)return;const r=b.dataset.r=='home'?null:REG.find(x=>x[0]==b.dataset.r);
+ close();if(innerWidth<=760)$('#panel').classList.remove('open');flyTo(r?fit([r[1],r[2],r[3],r[4]],16):fit(HOME,24))};
+
+/* ---------- רשימה ---------- */
+let lt;const schedList=()=>{clearTimeout(lt);lt=setTimeout(updList,180)};
+const updList=()=>{const x0=-tx/s,x1=(W-tx)/s,y0=-ty/s,y1=(H-ty)/s;
+ const pts=visible().filter(p=>p.x>=x0&&p.x<=x1&&p.y>=y0&&p.y<=y1).sort((a,b)=>a.c.localeCompare(b.c)||a.n.localeCompare(b.n,'he'));
+ $('#cnt').textContent=`(${pts.length})`;
+ $('#listHint').textContent=pts.length?'המקומות שנמצאים כרגע בתוך המסגרת של המפה. מזיזים את המפה והרשימה מתעדכנת.':(q?'לא נמצאו מקומות שמתאימים לחיפוש באזור הזה.':'אין מקומות באזור המוצג. נסו להתרחק או להדליק עוד שכבות.');
+ $('#list').innerHTML=pts.slice(0,400).map(p=>{const c=CATS[p.c];return `<li><button data-id="${p.id}"><span class="ic" style="--c:${c.c}">${c.i}</span><span><b>${esc(p.n)}</b><small>${c.n}${p.r?' · '+esc(p.r):''}</small></span></button></li>`}).join('')};
+$('#list').onclick=e=>{const b=e.target.closest('button');if(b)open(ALL[+b.dataset.id])};
+const tab=w=>{$('#t-layers').setAttribute('aria-selected',w=='layers');$('#t-list').setAttribute('aria-selected',w=='list');$('#p-layers').hidden=w!='layers';$('#p-list').hidden=w!='list'};
+$('#t-layers').onclick=()=>tab('layers');$('#t-list').onclick=()=>tab('list');
+
+/* ---------- חיפוש ---------- */
+$('#q').addEventListener('input',e=>{q=e.target.value.trim().toLowerCase();cluster();updList();if(q)tab('list')});
+$('#q').addEventListener('keydown',e=>{if(e.key=='Enter'){const r=visible();if(r.length==1)open(r[0]);else if(r.length){const xs=r.map(p=>p.x),ys=r.map(p=>p.y);
+ const x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);const span=Math.max((x1-x0)/(W-120),(y1-y0)/(H-120),1e-9);centerOn((x0+x1)/2,(y0+y1)/2,Math.min(1/span,fitS*12));tab('list')}}});
+
+/* ---------- חלונית בטלפון ---------- */
+$('#ptog').onclick=()=>{$('#panel').classList.add('open');close()};$('#grab').onclick=()=>$('#panel').classList.remove('open');
+
+/* ---------- ייבוא KML ---------- */
+const toast=m=>{const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(t._t);t._t=setTimeout(()=>t.hidden=true,3500)};
+const parseKML=txt=>{const doc=new DOMParser().parseFromString(txt,'text/xml'),out=[];
+ for(const pm of doc.getElementsByTagName('Placemark')){const pt=pm.getElementsByTagName('Point')[0];if(!pt)continue;
+  const co=(pt.getElementsByTagName('coordinates')[0]?.textContent||'').trim().split(',');const lon=+co[0],lat=+co[1];if(!isFinite(lat)||!isFinite(lon))continue;
+  const kid=(el,t)=>[...el.children].find(c=>c.localName==t);const name=(kid(pm,'name')?.textContent||'ללא שם').trim();
+  let folder='',f=pm.parentElement;while(f){if(f.localName=='Folder'){folder=(kid(f,'name')?.textContent||'').trim();break}f=f.parentElement}
+  const raw=(kid(pm,'description')?.textContent||'').replace(/<br\s*\/?>/gi,'\n').replace(/<\/p>/gi,'\n');
+  const d=new DOMParser().parseFromString(raw,'text/html').body.textContent.replace(/\n{3,}/g,'\n\n').trim();
+  out.push({n:name,c:guessCat(folder+' '+name),lat:+lat.toFixed(6),lon:+lon.toFixed(6),d,layer:folder})}
+ return out};
+$('#kml').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const pts=parseKML(await f.text());
+ if(!pts.length){toast(/NetworkLink/.test(await f.text())?'הקובץ מכיל רק קישור למפה. בייצוא צריך להוריד את הסימון מ"קישור רשת".':'לא נמצאו נקודות בקובץ');return}
+ IMP=pts;store.set('liadmap-imported',IMP);build();renderLayers();cluster();updList();toast(`נוספו ${pts.length} נקודות`);flyTo(fit(HOME,24))}catch(err){toast('לא הצלחתי לקרוא את הקובץ')}e.target.value=''});
+$('#clearImp').onclick=()=>{IMP=[];store.set('liadmap-imported',[]);build();renderLayers();cluster();updList();toast('הייבוא הוסר')};
+
+/* ---------- התקנה כאפליקציה ---------- */
+let deferred=null;
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;$('#install').classList.add('show')});
+const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent),standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone;
+if(isIOS&&!standalone)$('#install').classList.add('show');
+$('#install').onclick=async()=>{if(deferred){deferred.prompt();await deferred.userChoice.catch(()=>{});deferred=null;$('#install').classList.remove('show')}
+ else toast(isIOS?'בספארי: לוחצים על כפתור השיתוף ⬆️ ואז "הוסף למסך הבית"':'בתפריט הדפדפן בוחרים "התקנת אפליקציה" או "הוספה למסך הבית"')};
+addEventListener('appinstalled',()=>{$('#install').classList.remove('show');toast('האפליקציה הותקנה 🎉')});
+try{if('serviceWorker' in navigator&&location.protocol=='https:')navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
+renderLayers();
+fetch('points.json',{cache:'no-cache'}).then(r=>r.json()).then(d=>{BASE=d;build();renderLayers();cluster();updList()}).catch(()=>{$('#demoNote').textContent='לא הצלחתי לטעון את המקומות. נסו לרענן את הדף.'});
+}
+</script>
+</body>
+</html>
