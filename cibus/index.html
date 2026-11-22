@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#2b2420">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="סיבוס">
+<title>מפת סיבוס</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: field tool for a guide mid-tour — quick, warm, no fuss
+   IDEA: a meal-voucher stub laid over a city street map
+   PICTURE: the map itself, full screen
+   COLOUR/TYPE: basalt brown + Golan orange, Heebo
+   LAYOUT: top bar with city tabs, filter chips, bottom sheet popups */
+:root{--bas:#2b2420;--sand:#f6efe6;--org:#e0722f;--cafe:#8a5a3b;--sup:#2f7f86;--zone:#c2410c;--ink:#2b2420}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0;height:100%;font:15px/1.45 Heebo,Arial,sans-serif;color:var(--ink);background:var(--sand)}
+#app{display:flex;flex-direction:column;height:100%}
+header{background:var(--bas);color:#fff;padding:10px 12px 8px;box-shadow:0 2px 8px #0004;z-index:1000}
+.top{display:flex;align-items:center;gap:10px}
+h1{font-size:20px;margin:0;font-weight:800;flex:1;display:flex;align-items:center;gap:8px}
+h1 .tag{background:var(--org);color:#fff;font-size:12px;padding:2px 8px;border-radius:99px;font-weight:600}
+.ibtn{background:#ffffff1a;border:0;color:#fff;border-radius:10px;min-width:44px;height:40px;font:600 14px Heebo;cursor:pointer;padding:0 10px}
+.row{display:flex;gap:6px;overflow-x:auto;padding-top:8px;scrollbar-width:none}
+.row::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid #ffffff40;background:transparent;color:#fff;border-radius:99px;padding:7px 14px;font:600 14px Heebo;cursor:pointer;min-height:38px}
+.chip.on{background:var(--org);border-color:var(--org)}
+.f .chip{display:flex;align-items:center;gap:6px}
+.f .chip i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.f .chip.off{opacity:.45}
+#map{flex:1}
+.pin{width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid #fff;box-shadow:0 2px 6px #0006;display:grid;place-items:center}
+.pin span{transform:rotate(45deg);color:#fff;font:800 13px Heebo}
+.pin.zone{border-radius:50%;transform:none;width:34px;height:34px;border:3px dashed #fff}
+.pin.zone span{transform:none}
+.leaflet-popup-content{margin:12px 14px;font:14px/1.45 Heebo;direction:rtl;text-align:right;min-width:210px}
+.pp h3{margin:0 0 2px;font-size:17px}
+.pp .ad{color:#6b5d52;font-size:13px}
+.pp .badge{display:inline-block;font-size:12px;border-radius:6px;padding:2px 7px;margin:6px 0 4px;font-weight:600}
+.b-v{background:#dcfce7;color:#14532d}.b-c{background:#fef3c7;color:#78350f}.b-z{background:#ffedd5;color:#9a3412}
+.pp p{margin:4px 0}
+.nav{display:flex;gap:6px;margin-top:8px}
+.nav a{flex:1;text-align:center;text-decoration:none;color:#fff;border-radius:8px;padding:9px 4px;font-weight:600}
+.waze{background:#33ccff;color:#06283d!important}.gm{background:var(--bas)}
+#info{position:fixed;inset:0;background:#0008;z-index:2000;display:none;align-items:flex-end;justify-content:center}
+#info.show{display:flex}
+.sheet{background:var(--sand);width:100%;max-width:560px;max-height:82vh;overflow:auto;border-radius:18px 18px 0 0;padding:18px 18px 28px}
+.sheet h2{margin:0 0 8px;font-size:20px}
+.sheet h4{margin:14px 0 4px;color:var(--zone)}
+.sheet ul{margin:4px 0;padding-inline-start:20px}
+.sheet .x{float:left}
+.legend{display:grid;gap:6px;margin:8px 0}
+.legend div{display:flex;gap:8px;align-items:center}
+.legend i{width:14px;height:14px;border-radius:50%}
+#loc{position:absolute;bottom:22px;left:12px;z-index:1000;background:#fff;border:0;border-radius:50%;width:48px;height:48px;box-shadow:0 2px 8px #0005;font-size:20px;cursor:pointer}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app">
+<header>
+  <div class="top">
+    <h1>מפת סיבוס <span class="tag">תגלית</span></h1>
+    <button class="ibtn" id="ib" aria-label="מידע">מידע</button>
+  </div>
+  <div class="row c" id="cities"></div>
+  <div class="row f" id="filters"></div>
+</header>
+<div id="map"></div>
+</div>
+<button id="loc" aria-label="המיקום שלי">◎</button>
+
+<div id="info"><div class="sheet">
+  <button class="ibtn x" id="ix" style="background:var(--bas)">סגור</button>
+  <h2>איך עובדים עם המפה</h2>
+  <div class="legend">
+    <div><i style="background:var(--org)"></i>מסעדה / אוכל</div>
+    <div><i style="background:var(--cafe)"></i>בית קפה</div>
+    <div><i style="background:var(--sup)"></i>סופר</div>
+    <div><i style="background:var(--zone);outline:2px dashed var(--zone);outline-offset:2px"></i>אזור אוכל – הרבה מקומות, חפשו מדבקת סיבוס</div>
+  </div>
+  <h4>רמות ודאות</h4>
+  <ul>
+    <li><b>ירוק – מקור מציין סיבוס:</b> העסק עצמו מופיע כמכבד סיבוס.</li>
+    <li><b>צהוב – רשת שמכבדת סיבוס:</b> הרשת ברשימת המסעדות של סיבוס, אבל סניפים בזכיינות לפעמים לא מכבדים.</li>
+    <li><b>כתום – אזור אוכל:</b> שוק, מדרחוב או מתחם עם הרבה מקומות. בודקים בכניסה.</li>
+  </ul>
+  <h4>סופרים</h4>
+  <p>שופרסל, ויקטורי, AM:PM וסופר יודה מכבדים סיבוס בקופה או בקוד מהאפליקציה. אפשר גם לקנות שובר באפליקציה (באזור "איסוף עצמי"). רק מוצרי מזון, בלי אלכוהול וסיגריות, ולא מקבלים עודף. הכול כפוף למדיניות של הארגון שהנפיק את הכרטיס, אז כדאי לוודא מול הסוכן מה מותר בכרטיס של הקבוצה.</p>
+  <h4>חשוב</h4>
+  <p>המיקומים מקורבים לרמת הרחוב. כפתור Waze מנווט לפי שם וכתובת, כך שהוא מדויק גם אם הסיכה זזה קצת. לפני שמכניסים קבוצה, כדאי לבדוק באפליקציית Cibus Pluxee שהסניף עדיין פעיל.</p>
+  <p>להתקנה בטלפון: בתפריט הדפדפן בוחרים "הוספה למסך הבית". זו אפליקציה נפרדת ממפה לחיים טובים.</p>
+  <p style="color:#6b5d52;font-size:13px">גרסה 1 · נובמבר 2026 · נבנה עבור ליעד וולמן</p>
+</div></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+{
+const CITIES={
+  tlv:{n:'תל אביב',c:[32.0700,34.7700],z:14},
+  jlm:{n:'ירושלים',c:[31.7800,35.2185],z:15},
+  tib:{n:'טבריה',c:[32.7880,35.5330],z:14},
+  saf:{n:'צפת',c:[32.9645,35.4970],z:16},
+  sde:{n:'שדרות',c:[31.5245,34.5965],z:15}
+};
+const CAT={food:{n:'מסעדות',c:'var(--org)',h:'#e0722f',l:'מ'},cafe:{n:'קפה',c:'var(--cafe)',h:'#8a5a3b',l:'ק'},sup:{n:'סופרים',c:'var(--sup)',h:'#2f7f86',l:'ס'},zone:{n:'אזורי אוכל',c:'var(--zone)',h:'#c2410c',l:'★'}};
+const CONF={v:['b-v','מקור מציין סיבוס'],c:['b-c','רשת שמכבדת סיבוס – לוודא בסניף'],z:['b-z','אזור אוכל – חפשו מדבקת סיבוס']};
+// [city, cat, conf, name, address, lat, lng, note]
+const P=[
+ ['tlv','zone','z','שוק הכרמל ונחלת בנימין','שוק הכרמל, תל אביב',32.0687,34.7688,'דוכני אוכל, פלאפל ושווארמה. הרבה דוכנים קטנים לא מכבדים, לבדוק לפני שמזמינים.'],
+ ['tlv','zone','z','שרונה מרקט','קלמן מגן 3, תל אביב',32.0716,34.7869,'שוק אוכל מקורה עם עשרות דוכנים. טוב לצהריים לקבוצה שמתפזרת.'],
+ ['tlv','zone','z','נמל יפו ומגדל השעון','נמל יפו, תל אביב',32.0548,34.7563,'מסעדות דגים ובתי קפה סביב הנמל והשעון.'],
+ ['tlv','zone','z','דיזנגוף סנטר','דיזנגוף 50, תל אביב',32.0754,34.7752,'מתחם אוכל עם רשתות. בימי שישי יש גם שוק אוכל.'],
+ ['tlv','cafe','c','קפה לנדוור רוטשילד','שדרות רוטשילד 45, תל אביב',32.0643,34.7743,'ישיבה גדולה, מתאים לארוחת בוקר או צהריים.'],
+ ['tlv','cafe','c','בנדיקט רוטשילד','שדרות רוטשילד 29, תל אביב',32.0633,34.7727,'ארוחות בוקר כל היום.'],
+ ['tlv','cafe','c','קפה גרג נמל תל אביב','נמל תל אביב',32.0985,34.7738,'על הטיילת בנמל.'],
+ ['tlv','cafe','c','קפה גרג מתחם התחנה','מתחם התחנה, תל אביב',32.0584,34.7633,'ליד נווה צדק, נוח לשילוב עם סיור.'],
+ ['tlv','sup','c','AM:PM דיזנגוף','דיזנגוף פרישמן, תל אביב',32.0800,34.7737,'יש כמה סניפים לאורך דיזנגוף, אלנבי ובן יהודה, רובם פתוחים 24/7.'],
+ ['jlm','zone','z','שוק מחנה יהודה','מחנה יהודה, ירושלים',31.7849,35.2122,'צהריים וערב. בערב הדוכנים הופכים לברים ומסעדות.'],
+ ['jlm','cafe','c','ארומה מחנה יהודה','שוק מחנה יהודה, ירושלים',31.7853,35.2131,'בתוך השוק.'],
+ ['jlm','zone','z','מדרחוב בן יהודה','בן יהודה, ירושלים',31.7820,35.2180,'מסעדות, פלאפל, שווארמה ובתי קפה לאורך המדרחוב והרחובות שסביבו.'],
+ ['jlm','cafe','c','ארומה הלל','הלל 18, ירושלים',31.7800,35.2183,'הסניף הראשון של ארומה, ליד המדרחוב.'],
+ ['jlm','cafe','c','ארומה קינג ג׳ורג׳','המלך ג׳ורג׳ 14, ירושלים',31.7808,35.2163,''],
+ ['jlm','zone','z','מדרחוב ממילא','שדרות ממילא, ירושלים',31.7781,35.2253,'בין שער יפו למרכז העיר, הדרך הטבעית מהעיר העתיקה.'],
+ ['jlm','cafe','c','ארומה ממילא','מתחם ממילא, ירושלים',31.7774,35.2240,''],
+ ['jlm','zone','z','התחנה הראשונה','דוד רמז 4, ירושלים',31.7671,35.2247,'מתחם פתוח עם מסעדות ובתי קפה, טוב לערב.'],
+ ['tib','zone','z','טיילת טבריה','הטיילת, טבריה',32.7912,35.5418,'מסעדות דגים ובשרים לאורך הכנרת.'],
+ ['tib','zone','z','ביג פאשן טבריה (דנילוף)','יהודה הלוי 1, טבריה',32.7929,35.5330,'מרכז קניות במרכז העיר, ליד התחנה המרכזית, עם חניון תת־קרקעי.'],
+ ['tib','cafe','c','קפה קפה ביג פאשן','יהודה הלוי 1, טבריה',32.7932,35.5335,''],
+ ['tib','cafe','c','קפה גרג מרכז טבריה','יהודה הלוי, טבריה',32.7925,35.5324,''],
+ ['tib','cafe','c','קפה גרג + גרג קיטשן ביג פוריה','המברג 1, טבריה',32.7770,35.5130,'מתחם ביג בטבריה עילית, עם חניה נוחה לאוטובוס.'],
+ ['saf','zone','z','מדרחוב ירושלים','רחוב ירושלים, צפת',32.9653,35.4962,'פיצריות, פלאפל ובתי קפה. הרבה מקומות קטנים, לבדוק מדבקה.'],
+ ['saf','zone','z','קריית האמנים','קריית האמנים, צפת',32.9627,35.4929,'בעיקר קפה ומאפים.'],
+ ['saf','zone','z','קניון שערי העיר','שערי העיר, צפת',32.9640,35.5008,'קניון עם מקומות אוכל. מיקום מקורב.'],
+ ['sde','food','v','פסטה וזהו','ההסתדרות 1, שדרות',31.5252,34.5952,'מופיע כעובד עם סיבוס.'],
+ ['sde','zone','z','מרכז שדרות – רחוב הרצל','הרצל, שדרות',31.5247,34.5963,'שווארמה, חומוס ומאפיות לאורך הרצל.'],
+ ['sde','zone','z','כיכר הנשיא','כיכר הנשיא, שדרות',31.5236,34.5990,'מקומות אוכל סביב הכיכר. מיקום מקורב.']
+];
+const esc=s=>String(s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const map=L.map('map',{zoomControl:false}).setView(CITIES.tlv.c,CITIES.tlv.z);
+L.control.zoom({position:'bottomright'}).addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
+let shown={food:1,cafe:1,sup:1,zone:1};
+try{const s=JSON.parse(localStorage.getItem('cibus-f'));if(s)shown=s}catch(e){}
+const layers={};
+for(const k in CAT)layers[k]=L.layerGroup();
+P.forEach(([city,cat,conf,name,addr,lat,lng,note])=>{
+  const c=CAT[cat],z=cat==='zone';
+  const icon=L.divIcon({className:'',html:`<div class="pin ${z?'zone':''}" style="background:${c.c}"><span>${c.l}</span></div>`,iconSize:z?[34,34]:[30,30],iconAnchor:z?[17,17]:[15,30],popupAnchor:[0,z?-16:-28]});
+  const q=encodeURIComponent(name.replace(/\(.*?\)/g,'')+' '+addr);
+  const [bc,bt]=CONF[conf];
+  const html=`<div class="pp"><h3>${esc(name)}</h3><div class="ad">${esc(addr)}</div><span class="badge ${bc}">${bt}</span>${note?`<p>${esc(note)}</p>`:''}<div class="nav"><a class="waze" href="https://waze.com/ul?q=${q}&navigate=yes" target="_blank" rel="noopener">Waze</a><a class="gm" href="https://www.google.com/maps/search/?api=1&query=${q}" target="_blank" rel="noopener">גוגל מפות</a></div></div>`;
+  const m=L.marker([lat,lng],{icon}).bindPopup(html);
+  layers[cat].addLayer(m);
+  if(z)layers[cat].addLayer(L.circle([lat,lng],{radius:170,color:c.h,weight:1,fillOpacity:.08,dashArray:'4 4',interactive:false}));
+});
+const apply=()=>{for(const k in layers){shown[k]?layers[k].addTo(map):map.removeLayer(layers[k])}};
+apply();
+const cityEl=document.getElementById('cities'),filEl=document.getElementById('filters');
+let cur='tlv';
+try{cur=localStorage.getItem('cibus-c')||'tlv'}catch(e){}
+if(!CITIES[cur])cur='tlv';
+const drawCities=()=>{cityEl.innerHTML=Object.entries(CITIES).map(([k,v])=>`<button class="chip ${k===cur?'on':''}" data-c="${k}">${v.n}</button>`).join('')};
+const drawFilters=()=>{filEl.innerHTML=Object.entries(CAT).map(([k,v])=>`<button class="chip ${shown[k]?'':'off'}" data-f="${k}"><i style="background:${v.c}"></i>${v.n}</button>`).join('')};
+drawCities();drawFilters();
+map.setView(CITIES[cur].c,CITIES[cur].z);
+cityEl.addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(!b)return;cur=b.dataset.c;try{localStorage.setItem('cibus-c',cur)}catch(x){}drawCities();map.flyTo(CITIES[cur].c,CITIES[cur].z,{duration:.8})});
+filEl.addEventListener('click',e=>{const b=e.target.closest('[data-f]');if(!b)return;const k=b.dataset.f;shown[k]=shown[k]?0:1;try{localStorage.setItem('cibus-f',JSON.stringify(shown))}catch(x){}drawFilters();apply()});
+const info=document.getElementById('info');
+document.getElementById('ib').onclick=()=>info.classList.add('show');
+document.getElementById('ix').onclick=()=>info.classList.remove('show');
+info.addEventListener('click',e=>{if(e.target===info)info.classList.remove('show')});
+let me=null;
+document.getElementById('loc').onclick=()=>{
+  if(!navigator.geolocation)return;
+  navigator.geolocation.getCurrentPosition(p=>{
+    const ll=[p.coords.latitude,p.coords.longitude];
+    if(me)me.setLatLng(ll);else me=L.circleMarker(ll,{radius:8,color:'#fff',weight:3,fillColor:'#2563eb',fillOpacity:1}).addTo(map);
+    map.flyTo(ll,16);
+  },()=>{},{enableHighAccuracy:true,timeout:10000});
+};
+try{if('serviceWorker' in navigator&&location.protocol=='https:')navigator.serviceWorker.register('sw.js',{scope:'./'}).catch(()=>{})}catch(e){}
+}
+</script>
+</body>
+</html>
