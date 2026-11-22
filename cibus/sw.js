@@ -1,5 +1,5 @@
 // מפת סיבוס – שומר את המפה לשימוש גם בלי קליטה
-const VERSION = 'v1';
+const VERSION = 'v2';
 const APP = 'cibus-app-' + VERSION, TILES = 'cibus-tiles';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png',
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'];
